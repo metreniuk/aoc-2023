@@ -1,7 +1,7 @@
 use std::fs;
 
 pub fn process_day() {
-    let file = fs::read_to_string("inputs/day-2-1-large.txt").unwrap();
+    let file = fs::read_to_string("inputs/day-2-2-large.txt").unwrap();
     // red 0, green 1, blue 2
     let max_values = (12, 13, 14);
     let max_red = 12;
@@ -32,17 +32,38 @@ pub fn process_day() {
                 rest,
             )
         })
-        .filter(|(id, game)| {
-            game.iter().all(|results| {
-                results.iter().all(|result| match result.to_owned() {
-                    (count, "red") => count <= max_red,
-                    (count, "blue") => count <= max_blue,
-                    (count, "green") => count <= max_green,
-                    _ => false,
-                })
-            })
+        .map(|(id, game)| {
+            let min_red = game
+                .iter()
+                .map(|results| results.iter().find(|res| res.1 == "red"))
+                .filter(|x| x.is_some())
+                .map(|x| x.unwrap().0)
+                .max()
+                .unwrap();
+
+            let min_blue = game
+                .iter()
+                .map(|results| results.iter().find(|res| res.1 == "blue"))
+                .filter(|x| x.is_some())
+                .map(|x| x.unwrap().0)
+                .max()
+                .unwrap();
+
+            let min_green = game
+                .iter()
+                .map(|results| results.iter().find(|res| res.1 == "green"))
+                .filter(|x| x.is_some())
+                .map(|x| x.unwrap().0)
+                .max()
+                .unwrap();
+
+            println!(
+                "game {} red {} blue {} green {}",
+                id, min_red, min_blue, min_green
+            );
+
+            min_red * min_blue * min_green
         })
-        .map(|(id, _)| id)
         .sum();
     // .collect::<Vec<_>>();
 
