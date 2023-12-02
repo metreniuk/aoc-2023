@@ -1,3 +1,5 @@
+mod day_two;
+
 fn main() {
-    println!("Hello, world!");
+    day_two::process_day();
 }
