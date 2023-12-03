@@ -1,5 +1,5 @@
-mod day_two;
+mod day_three;
 
 fn main() {
-    day_two::process_day();
+    day_three::process_day();
 }
