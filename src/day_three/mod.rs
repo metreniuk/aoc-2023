@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub fn process_day() {
     let file = std::fs::read_to_string("inputs/day-3-large.txt").unwrap();
 
@@ -5,6 +7,8 @@ pub fn process_day() {
         .lines()
         .map(|line| line.chars().collect::<Vec<_>>())
         .collect::<Vec<_>>();
+
+    let mut potential_gears: HashMap<(usize, usize), Vec<String>> = HashMap::new();
 
     let vals = grid
         .iter()
@@ -49,6 +53,10 @@ pub fn process_day() {
                     };
 
                     if !val.is_digit(10) && *val != '.' {
+                        if *val == '*' {
+                            let gear = potential_gears.entry((x, y)).or_default();
+                            gear.push(num.clone());
+                        }
                         // println!("{} --- {} {:?} {:?}", num, val, start, end);
                         return true;
                     }
@@ -64,5 +72,17 @@ pub fn process_day() {
     // check for each number that it touches symbol
     // sum
     println!("sum {:?}", vals);
-    // println!("grid {:?}", grid);
+
+    let gear_score: usize = potential_gears
+        .values()
+        .filter(|nums| nums.len() == 2)
+        .map(|nums| {
+            let prod = nums.first().unwrap().parse::<usize>().unwrap()
+                * nums.last().unwrap().parse::<usize>().unwrap();
+            // println!("prod {} {:?}", prod, nums);
+            prod
+        })
+        .sum();
+
+    println!("gear_score {:?}", gear_score);
 }
