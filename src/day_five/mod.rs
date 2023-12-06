@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 pub fn process_day() {
-    let file = std::fs::read_to_string("inputs/day-5-large.txt").unwrap();
+    let file = std::fs::read_to_string("inputs/day-5-small.txt").unwrap();
     let mut seed_to_soil: Vec<(isize, isize, isize)> = Vec::new();
     let mut soil_to_fertilizer: Vec<(isize, isize, isize)> = Vec::new();
     let mut fertilizer_to_water: Vec<(isize, isize, isize)> = Vec::new();
@@ -85,18 +83,48 @@ pub fn process_day() {
         }
     }
 
+    let target_seeds: Vec<_> = target_seeds
+        .chunks(2)
+        .map(|x| (x[0], x[0] + x[1]))
+        .collect();
+
     let min_location = target_seeds
         .into_iter()
-        .map(|seed| {
-            let soil = get_dest_from_source(&seed_to_soil, seed);
-            let fertilizer = get_dest_from_source(&soil_to_fertilizer, soil);
-            let water = get_dest_from_source(&fertilizer_to_water, fertilizer);
-            let light = get_dest_from_source(&water_to_light, water);
-            let temp = get_dest_from_source(&light_to_temperature, light);
-            let humidity = get_dest_from_source(&temperature_to_humidity, temp);
-            let location = get_dest_from_source(&humidity_to_location, humidity);
-            location
+        .map(|(start, end)| {
+            let mut min = 99999999999999999;
+            let mut l = start;
+            let mut r = end;
+            while l < r {
+                let mid = ((r - l) / 2) + l;
+                let location = get_location(
+                    mid,
+                    &seed_to_soil,
+                    &soil_to_fertilizer,
+                    &fertilizer_to_water,
+                    &water_to_light,
+                    &light_to_temperature,
+                    &temperature_to_humidity,
+                    &humidity_to_location,
+                );
+                if location < min {
+                    min = location;
+                }
+            }
+
+            println!("{start} {end} {min}");
+
+            min
         })
+        // .map(|seed| {
+        //     let soil = get_dest_from_source(&seed_to_soil, seed);
+        //     let fertilizer = get_dest_from_source(&soil_to_fertilizer, soil);
+        //     let water = get_dest_from_source(&fertilizer_to_water, fertilizer);
+        //     let light = get_dest_from_source(&water_to_light, water);
+        //     let temp = get_dest_from_source(&light_to_temperature, light);
+        //     let humidity = get_dest_from_source(&temperature_to_humidity, temp);
+        //     let location = get_dest_from_source(&humidity_to_location, humidity);
+        //     location
+        // })
         .min()
         .unwrap();
 
@@ -118,4 +146,40 @@ fn get_dest_from_source(ranges: &Vec<(isize, isize, isize)>, source: isize) -> i
 
         destination
     })
+}
+
+fn get_source_from_dest(ranges: &Vec<(isize, isize, isize)>, destination: isize) -> isize {
+    let range = ranges.iter().find(|(dest, src, range)| {
+        if destination < *dest || destination > src + range {
+            return false;
+        }
+
+        return true;
+    });
+
+    range.map_or(destination, |(dest, src, range)| {
+        let diff = src - dest;
+        let destination = destination - diff;
+
+        destination
+    })
+}
+
+fn get_location(
+    seed: isize,
+    seed_to_soil: &Vec<(isize, isize, isize)>,
+    soil_to_fertilizer: &Vec<(isize, isize, isize)>,
+    fertilizer_to_water: &Vec<(isize, isize, isize)>,
+    water_to_light: &Vec<(isize, isize, isize)>,
+    light_to_temperature: &Vec<(isize, isize, isize)>,
+    temperature_to_humidity: &Vec<(isize, isize, isize)>,
+    humidity_to_location: &Vec<(isize, isize, isize)>,
+) -> isize {
+    let soil = get_dest_from_source(seed_to_soil, seed);
+    let fertilizer = get_dest_from_source(soil_to_fertilizer, soil);
+    let water = get_dest_from_source(fertilizer_to_water, fertilizer);
+    let light = get_dest_from_source(water_to_light, water);
+    let temp = get_dest_from_source(light_to_temperature, light);
+    let humidity = get_dest_from_source(temperature_to_humidity, temp);
+    get_dest_from_source(humidity_to_location, humidity)
 }
