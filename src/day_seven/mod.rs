@@ -6,7 +6,11 @@ pub fn process_day() {
         .lines()
         .map(|line| line.split_once(" ").unwrap())
         .map(|(hand, bid)| {
-            let kind = get_hand_kind(hand);
+            let kind = if count_jokers(hand) > 0 {
+                get_hand_kind_with_j(hand)
+            } else {
+                get_hand_kind(hand)
+            };
             (hand, bid, kind)
         })
         .collect::<Vec<_>>();
@@ -29,7 +33,7 @@ pub fn process_day() {
     println!("res {:?} {}", hands_played, winnings)
 }
 
-static RANKS: &str = "23456789TJQKA";
+static RANKS: &str = "J23456789TQKA";
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum HandKind {
@@ -72,6 +76,58 @@ fn get_hand_kind(hand: &str) -> HandKind {
     }
 }
 
+fn get_hand_kind_with_j(hand: &str) -> HandKind {
+    let jokers_in_hand = count_jokers(hand);
+    match get_hand_kind(hand) {
+        // 2345J
+        HandKind::HighCard => HandKind::OnePair,
+        // 2245J
+        // 245JJ
+        HandKind::OnePair => {
+            if jokers_in_hand == 2 {
+                HandKind::ThreeOfKind
+            } else if jokers_in_hand == 1 {
+                HandKind::TwoPair
+            } else {
+                unreachable!("joker issue")
+            }
+        }
+        // 2244J
+        // 224JJ
+        HandKind::TwoPair => {
+            if jokers_in_hand == 2 {
+                HandKind::FourOfKind
+            } else if jokers_in_hand == 1 {
+                HandKind::FullHouse
+            } else {
+                unreachable!("joker issue")
+            }
+        }
+        // 23JJJ
+        // 2333J
+        HandKind::ThreeOfKind => HandKind::FourOfKind,
+        // 9JJ99
+        // JJJ99
+        HandKind::FullHouse => HandKind::FiveOfKind,
+        // 3333J
+        // 2JJJJ
+        HandKind::FourOfKind => {
+            if jokers_in_hand == 4 {
+                HandKind::FourOfKind
+            } else if jokers_in_hand == 1 {
+                HandKind::FiveOfKind
+            } else {
+                unreachable!("joker issue")
+            }
+        }
+        HandKind::FiveOfKind => HandKind::FiveOfKind,
+    }
+}
+
+fn count_jokers(hand: &str) -> usize {
+    hand.chars().filter(|ch| *ch == 'J').count()
+}
+
 fn cmp_hands_ranks(hand_1: &str, hand_2: &str) -> Ordering {
     hand_1
         .chars()
@@ -85,3 +141,5 @@ fn cmp_hands_ranks(hand_1: &str, hand_2: &str) -> Ordering {
         })
         .unwrap()
 }
+
+// TODO: Very close, just write some tests or fix the error
