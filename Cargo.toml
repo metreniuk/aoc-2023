@@ -1,3 +1,5 @@
+cargo-features = ["profile-rustflags"]
+
 [package]
 name = "rust-2023"
 version = "0.1.0"
@@ -7,3 +9,13 @@ edition = "2021"
 
 [dependencies]
 regex = "1"
+
+[unstable]
+profile-rustflags = true
+
+[profile.dev]
+rustflags = ["-C", "link-args=-Wl,-stack_size,8000000"]
+
+[profile.release]
+rustflags = ["-C", "link-args=-Wl,-stack_size,8000000"]
+
